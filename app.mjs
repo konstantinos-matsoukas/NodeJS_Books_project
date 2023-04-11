@@ -7,6 +7,9 @@ http.createServer(async(req,res) =>{
         if(req.url === '/books'){
                await bookList.loadBooksFromFile()
                res.write(htmlTop)
+               res.write("<h1>My Books :</h1>")
+
+               res.write("<a href = '/addbookform'>Add a book</a>")
                res.write("<ul>")
                bookList.myBooks.books.forEach((book) =>{
                         res.write(`<li>${book.title} --- ${book.author}</li>`)
@@ -16,7 +19,31 @@ http.createServer(async(req,res) =>{
 
                res.write(htmlBottom)
                res.end()
-        }else{
+        }
+        else if (req.url === '/addbookform'){
+                res.write(htmlTop)
+                res.write(htmlForm)
+
+
+                res.write(htmlBottom)
+                res.end()
+
+        }
+        else if (req.url.startsWith('/loadbook?')){
+                const myUrl = new URL("http://" + req.headers.host + req.url)
+                
+                const newBook = {
+                         "title":myUrl.searchParams.get("newBookTitle"),
+                         "author":myUrl.searchParams.get("newBookAuthor")
+                }
+                
+                await bookList.addBookToFile(newBook)
+
+                res.writeHead(303, {location: '/books'})
+                res.end()
+
+        }
+        else{
                 res.writeHead(303, {location: '/books'})
                 res.end()
         }
@@ -37,3 +64,14 @@ const htmlTop = `
 const htmlBottom = `
 </body>
 </html>`
+
+const htmlForm = `
+<form action = "/loadbook" method = "get" >
+<input type = "text" name = "newBookTitle" placeholder = "Title">
+<br><br>
+
+<input type = "text" name = "newBookAuthor" placeholder = "Author">
+<br><br>
+
+<input type = "submit" value = "Submit">
+</form>`
